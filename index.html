@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- Previous head section and styles remain the same -->
+
+<body>
+    <!-- Previous nav and structure remains largely the same -->
+
+    <!-- Add Worker Modal -->
+    <div id="addWorkerModal" class="hidden fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Add New Worker</h3>
+                <form id="workerForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Worker Name</label>
+                        <input type="text" id="workerName" class="mt-1 block w-full p-2 border rounded-md" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Skills</label>
+                        <div class="mt-2 space-y-2">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="skills" value="lace" class="form-checkbox">
+                                <span class="ml-2">Lace Attachment</span>
+                            </label>
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="skills" value="stone" class="form-checkbox">
+                                <span class="ml-2">Stone Work</span>
+                            </label>
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="skills" value="folding" class="form-checkbox">
+                                <span class="ml-2">Folding Work</span>
+                            </label>
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="skills" value="blouse" class="form-checkbox">
+                                <span class="ml-2">Blouse Cutting</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Contact Number</label>
+                        <input type="tel" id="workerPhone" class="mt-1 block w-full p-2 border rounded-md" required>
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="closeModal('addWorkerModal')" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Cancel</button>
+                        <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Add Worker</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Worker Details Modal -->
+    <div id="workerDetailsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full">
+        <div class="relative top-20 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-medium leading-6 text-gray-900" id="workerDetailsName"></h3>
+                    <button onclick="closeModal('workerDetailsModal')" class="text-gray-400 hover:text-gray-500">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="font-medium mb-2">Active Jobs</h4>
+                        <div id="workerActiveJobs" class="space-y-2"></div>
+                    </div>
+                    <div>
+                        <h4 class="font-medium mb-2">Completed Jobs</h4>
+                        <div id="workerCompletedJobs" class="space-y-2"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Previous script content remains, adding new functions:
+
+        document.getElementById('workerForm').addEventListener('submit', handleWorkerSubmit);
+
+        function handleWorkerSubmit(e) {
+            e.preventDefault();
+            const skills = Array.from(document.querySelectorAll('input[name="skills"]:checked'))
+                .map(checkbox => checkbox.value);
+            
+            const worker = {
+                id: Date.now(),
+                name: document.getElementById('workerName').value,
+                skills: skills,
+                phone: document.getElementById('workerPhone').value,
+                dateAdded: new Date().toISOString()
+            };
+            
+            workers.push(worker);
+            updateDisplay();
+            closeModal('addWorkerModal');
+            e.target.reset();
+        }
+
+        function showWorkerDetails(workerId) {
+            const worker = workers.find(w => w.id === workerId);
+            if (!worker) return;
+
+            document.getElementById('workerDetailsName').textContent = worker.name;
+            
+            const activeJobs = jobs.filter(j => j.workerId === workerId && j.status === 'active');
+            const completedJobs = jobs.filter(j => j.workerId === workerId && j.status === 'completed');
+
+            document.getElementById('workerActiveJobs').innerHTML = activeJobs.map(job => `
+                <div class="bg-gray-50 p-3 rounded-lg">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-medium">${job.type}</h4>
+                        <button onclick="completeJob(${job.id})" class="text-sm bg-green-500 text-white px-2 py-1 rounded">
+                            Complete
+                        </button>
+                    </div>
+                    <p class="text-sm text-gray-600 mt-1">Materials: ${job.materials}</p>
+                    <p class="text-sm text-gray-600">Due: ${new Date(job.deadline).toLocaleDateString()}</p>
+                </div>
+            `).join('') || '<p class="text-gray-500">No active jobs</p>';
+
+            document.getElementById('workerCompletedJobs').innerHTML = completedJobs.map(job => `
+                <div class="bg-gray-50 p-3 rounded-lg">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-medium">${job.type}</h4>
+                        <span class="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">Completed</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mt-1">Materials: ${job.materials}</p>
+                    <p class="text-sm text-gray-600">Completed: ${new Date(job.completedDate).toLocaleDateString()}</p>
+                </div>
+            `).join('') || '<p class="text-gray-500">No completed jobs</p>';
+
+            openModal('workerDetailsModal');
+        }
+
+        function completeJob(jobId) {
+            const job = jobs.find(j => j.id === jobId);
+            if (job) {
+                job.status = 'completed';
+                job.completedDate = new Date().toISOString();
+                updateDisplay();
+                showWorkerDetails(job.workerId); // Refresh the worker details modal
+            }
+        }
+
+        // Updated renderWorkers function to include click handler
+        function renderWorkers() {
+            const workersList = document.getElementById('workersList');
+            workersList.innerHTML = workers.map(worker => `
+                <div class="bg-gray-50 p-3 rounded-lg cursor-pointer hover:bg-gray-100" 
+                     onclick="showWorkerDetails(${worker.id})">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-medium">${worker.name}</h4>
+                        <span class="text-sm bg-indigo-100 text-indigo-800 px-2 py-1 rounded">
+                            ${jobs.filter(j => j.workerId === worker.id && j.status === 'active').length} active jobs
+                        </span>
+                    </div>
+                    <p class="text-sm text-gray-600 mt-1">${worker.skills.join(', ')}</p>
+                    <p class="text-sm text-gray-600">${worker.phone}</p>
+                </div>
+            `).join('') || '<p class="text-gray-500 text-center">No workers added yet</p>';
+        }
+
+        // Initialize some sample data
+        workers = [
+            {id: 1, name: "John Doe", skills: ["lace", "stone"], phone: "1234567890", dateAdded: new Date().toISOString()},
+            {id: 2, name: "Jane Smith", skills: ["folding", "blouse"], phone: "0987654321", dateAdded: new Date().toISOString()}
+        ];
+
+        jobs = [
+            {id: 1, type: "Lace Attachment", workerId: 1, materials: "Saree, Lace", deadline: "2024-01-20", status: "active", dateCreated: new Date().toISOString()},
+            {id: 2, type: "Stone Work", workerId: 1, materials: "Blouse piece, Stones", deadline: "2024-01-25", status: "completed", dateCreated: new Date().toISOString(), completedDate: new Date().toISOString()}
+        ];
+
+        // Initial display update
+        updateDisplay();
+    </script>
+<script>document.body.addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); return }, { passive: false })</script>
+	</body>
+</html>
